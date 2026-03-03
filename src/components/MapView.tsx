@@ -92,6 +92,14 @@ interface MapViewProps extends BaseProps {
    */
   zoomEnabled?: boolean;
   /**
+   * Enable/Disable zoom increase on the map when the user double taps
+   */
+  doubleTapZoomEnabled?: boolean;
+  /**
+   * Enable/Disable tap and drag zoom gesture
+   */
+  tapAndDragZoomEnabled?: boolean;
+  /**
    * Enable/Disable scroll on the map
    */
   scrollEnabled?: boolean;
