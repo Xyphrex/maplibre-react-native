@@ -132,6 +132,8 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
     private ReadableMap mCompassViewMargins;
     private int mCompassViewPosition = -1;
     private Boolean mZoomEnabled;
+    private Boolean mDoubleTapZoomEnabled;
+    private Boolean mTapAndDragZoomEnabled;
 
     private SymbolManager symbolManager;
 
@@ -817,6 +819,19 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
         updateUISettings();
     }
 
+    public void setReactDoubleTapZoomEnabled(boolean doubleTapZoomEnabled) {
+        mDoubleTapZoomEnabled = doubleTapZoomEnabled;
+        if (mMap != null && mMap.getUiSettings() != null) {
+            mMap.getUiSettings().setDoubleTapGesturesEnabled(doubleTapZoomEnabled);
+        }
+    }
+
+    public void setReactTapAndDragZoomEnabled(boolean tapAndDragZoomEnabled) {
+        mTapAndDragZoomEnabled = tapAndDragZoomEnabled;
+        updateUISettings();
+        // something to do here
+    }
+
     public void setReactScrollEnabled(boolean scrollEnabled) {
         mScrollEnabled = scrollEnabled;
         updateUISettings();
@@ -1194,6 +1209,17 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
         if (mZoomEnabled != null && uiSettings.isZoomGesturesEnabled() != mZoomEnabled) {
             uiSettings.setZoomGesturesEnabled(mZoomEnabled);
             if (!mZoomEnabled) {
+                mMap.getGesturesManager().getStandardScaleGestureDetector().interrupt();
+            }
+        }
+
+        if (mDoubleTapZoomEnabled != null && uiSettings.isDoubleTapGesturesEnabled() != mDoubleTapZoomEnabled) {
+            uiSettings.setDoubleTapGesturesEnabled(mDoubleTapZoomEnabled);
+        }
+
+        if (mTapAndDragZoomEnabled != null && uiSettings.isZoomGesturesEnabled() != mTapAndDragZoomEnabled) {
+            uiSettings.setZoomGesturesEnabled(mTapAndDragZoomEnabled);
+            if (!mTapAndDragZoomEnabled) {
                 mMap.getGesturesManager().getStandardScaleGestureDetector().interrupt();
             }
         }
