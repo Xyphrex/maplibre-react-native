@@ -23,8 +23,10 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.bridge.WritableNativeMap;
 import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.geojson.Feature;
@@ -589,6 +591,40 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
 
         return result;
     }
+
+@Override
+public boolean dispatchTouchEvent(MotionEvent event) {
+    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        if (mMap != null) {
+
+            LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
+
+            // Geometry
+            WritableMap geometry = Arguments.createMap();
+            geometry.putString("type", "Point");
+
+            WritableArray coordinates = Arguments.createArray();
+            coordinates.pushDouble(latLng.getLongitude());
+            coordinates.pushDouble(latLng.getLatitude());
+            geometry.putArray("coordinates", coordinates);
+
+            // Properties (empty to match onPress)
+            WritableMap properties = Arguments.createMap();
+
+            // Build event map to mimic onPress
+            WritableMap eventMap = Arguments.createMap();
+            eventMap.putMap("geometry", geometry);
+            eventMap.putMap("properties", properties);
+            eventMap.putDouble("screenPointX", event.getX());
+            eventMap.putDouble("screenPointY", event.getY());
+
+            // Dispatch using existing MapLibre RN event system
+            sendEvent(EventKeys.MAP_TOUCH_START, eventMap);
+        }
+    }
+
+    return super.dispatchTouchEvent(event);
+}
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
