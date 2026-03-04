@@ -597,32 +597,18 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
 public boolean dispatchTouchEvent(MotionEvent event) {
     if (event.getAction() == MotionEvent.ACTION_DOWN) {
         if (mMap != null) {
-
             LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
-
-            // Geometry
-            WritableMap geometry = Arguments.createMap();
-            geometry.putString("type", "Point");
-
-            WritableArray coordinates = Arguments.createArray();
-            coordinates.pushDouble(latLng.getLongitude());
-            coordinates.pushDouble(latLng.getLatitude());
-            geometry.putArray("coordinates", coordinates);
-
-            // Properties (empty to match onPress)
+            PointF screenPoint = new PointF(event.getX(), event.getY());
+            
+            // Create properties with screen coordinates (same structure as MapClickEvent)
             WritableMap properties = Arguments.createMap();
+            properties.putDouble("screenPointX", screenPoint.x);
+            properties.putDouble("screenPointY", screenPoint.y);
+            
+            // Create a proper GeoJSON Feature using the same utility as MapClickEvent
+            final WritableMap geoJSONFeature = GeoJSONUtils.toPointFeature(latLng, properties);
 
-            // Build event map to mimic onPress
-            WritableMap eventMap = Arguments.createMap();
-            eventMap.putMap("geometry", geometry);
-            eventMap.putMap("properties", properties);
-            eventMap.putDouble("screenPointX", event.getX());
-            eventMap.putDouble("screenPointY", event.getY());
-
-            // Dispatch using existing MapLibre RN event system via the view manager.
-            // `sendEvent` no longer exists on the view itself, we have to create
-            // an `IEvent` and hand it off to the manager (which extends
-            // `AbstractEventEmitter`).
+            // Dispatch via the view manager's event system
             mManager.handleEvent(new org.maplibre.reactnative.events.IEvent() {
                 @Override
                 public int getID() {
@@ -636,8 +622,6 @@ public boolean dispatchTouchEvent(MotionEvent event) {
 
                 @Override
                 public String getType() {
-                    // type is primarily included in the JSON payload; we can
-                    // simply reuse the key here.
                     return EventKeys.MAP_TOUCH_START;
                 }
 
@@ -647,24 +631,23 @@ public boolean dispatchTouchEvent(MotionEvent event) {
                 }
 
                 @Override
-                public boolean equals(org.maplibre.reactnative.events.IEvent event) {
-                    return getKey().equals(event.getKey()) && getType().equals(event.getType());
+                public boolean equals(org.maplibre.reactnative.events.IEvent e) {
+                    return getKey().equals(e.getKey()) && getType().equals(e.getType());
                 }
 
                 @Override
                 public boolean canCoalesce() {
-                    // touch‑start events should not be coalesced
                     return false;
                 }
 
                 @Override
-                public com.facebook.react.bridge.WritableMap getPayload() {
-                    return eventMap;
+                public WritableMap getPayload() {
+                    return geoJSONFeature;
                 }
 
                 @Override
-                public com.facebook.react.bridge.WritableMap toJSON() {
-                    com.facebook.react.bridge.WritableMap map = com.facebook.react.bridge.Arguments.createMap();
+                public WritableMap toJSON() {
+                    WritableMap map = Arguments.createMap();
                     map.putString("type", getType());
                     map.putMap("payload", getPayload());
                     return map;
