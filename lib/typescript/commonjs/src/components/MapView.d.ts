@@ -132,6 +132,10 @@ interface MapViewProps extends BaseProps {
      */
     onPress?: (feature: GeoJSON.Feature) => void;
     /**
+     * Map touch start listener, gets called when a user starts touching the map
+     */
+    onTouchStart?: (feature: GeoJSON.Feature) => void;
+    /**
      * Map long press listener, gets called when a user long presses the map
      */
     onLongPress?: (feature: GeoJSON.Feature) => void;
@@ -201,9 +205,12 @@ interface MapViewProps extends BaseProps {
     regionDidChangeDebounceTime?: number;
     children?: ReactNode;
 }
-interface NativeProps extends Omit<MapViewProps, "onPress" | "onLongPress"> {
+interface NativeProps extends Omit<MapViewProps, "onPress" | "onTouchStart" | "onLongPress"> {
     mapStyle?: string;
     onPress(event: NativeSyntheticEvent<{
+        payload: GeoJSON.Feature;
+    }>): void;
+    onTouchStart(event: NativeSyntheticEvent<{
         payload: GeoJSON.Feature;
     }>): void;
     onLongPress(event: NativeSyntheticEvent<{
