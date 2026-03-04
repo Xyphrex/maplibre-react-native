@@ -598,13 +598,19 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
 public boolean dispatchTouchEvent(MotionEvent event) {
     if (event.getAction() == MotionEvent.ACTION_DOWN) {
         if (mMap != null) {
-            LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
-            PointF screenPoint = new PointF(event.getX(), event.getY());
-            
-            // Dispatch the touch start event using the same pattern as MapClickEvent
-            org.maplibre.reactnative.events.MapTouchStartEvent touchEvent = 
-                new org.maplibre.reactnative.events.MapTouchStartEvent(this, latLng, screenPoint);
-            mManager.handleEvent(touchEvent);
+            try {
+                LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
+                PointF screenPoint = new PointF(event.getX(), event.getY());
+                
+                // Dispatch the touch start event using the same pattern as MapClickEvent
+                org.maplibre.reactnative.events.MapTouchStartEvent touchEvent = 
+                    new org.maplibre.reactnative.events.MapTouchStartEvent(this, latLng, screenPoint);
+                Log.d(LOG_TAG, "MapTouchStartEvent created, key=" + touchEvent.getKey() + ", payload=" + touchEvent.getPayload());
+                mManager.handleEvent(touchEvent);
+                Log.d(LOG_TAG, "MapTouchStartEvent dispatched via manager");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error dispatching MAP_TOUCH_START: ", e);
+            }
         }
     }
 
