@@ -5,6 +5,7 @@ public class EventKeys {
 
     // map events
     public static final String MAP_CLICK = ns("map.press");
+    public static final String MAP_TOUCH_START = "onMapTouchStart";
     public static final String MAP_LONG_CLICK = ns("map.longpress");
     public static final String MAP_ONCHANGE = ns("map.change");
     public static final String MAP_ON_LOCATION_CHANGE = ns("map.location.change");
