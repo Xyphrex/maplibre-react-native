@@ -68,6 +68,7 @@ import org.maplibre.reactnative.events.AndroidCallbackEvent;
 import org.maplibre.reactnative.events.IEvent;
 import org.maplibre.reactnative.events.MapChangeEvent;
 import org.maplibre.reactnative.events.MapClickEvent;
+import org.maplibre.reactnative.events.MapTouchStartEvent;
 import org.maplibre.reactnative.events.constants.EventTypes;
 import org.maplibre.reactnative.events.constants.EventKeys;
 import org.maplibre.reactnative.modules.MLRNModule;
@@ -600,59 +601,10 @@ public boolean dispatchTouchEvent(MotionEvent event) {
             LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
             PointF screenPoint = new PointF(event.getX(), event.getY());
             
-            // Create properties with screen coordinates (same structure as MapClickEvent)
-            WritableMap properties = Arguments.createMap();
-            properties.putDouble("screenPointX", screenPoint.x);
-            properties.putDouble("screenPointY", screenPoint.y);
-            
-            // Create a proper GeoJSON Feature using the same utility as MapClickEvent
-            final WritableMap geoJSONFeature = GeoJSONUtils.toPointFeature(latLng, properties);
-
-            // Dispatch via the view manager's event system
-            mManager.handleEvent(new org.maplibre.reactnative.events.IEvent() {
-                @Override
-                public int getID() {
-                    return getId();
-                }
-
-                @Override
-                public String getKey() {
-                    return EventKeys.MAP_TOUCH_START;
-                }
-
-                @Override
-                public String getType() {
-                    return EventKeys.MAP_TOUCH_START;
-                }
-
-                @Override
-                public long getTimestamp() {
-                    return System.currentTimeMillis();
-                }
-
-                @Override
-                public boolean equals(org.maplibre.reactnative.events.IEvent e) {
-                    return getKey().equals(e.getKey()) && getType().equals(e.getType());
-                }
-
-                @Override
-                public boolean canCoalesce() {
-                    return false;
-                }
-
-                @Override
-                public WritableMap getPayload() {
-                    return geoJSONFeature;
-                }
-
-                @Override
-                public WritableMap toJSON() {
-                    WritableMap map = Arguments.createMap();
-                    map.putString("type", getType());
-                    map.putMap("payload", getPayload());
-                    return map;
-                }
-            });
+            // Dispatch the touch start event using the same pattern as MapClickEvent
+            org.maplibre.reactnative.events.MapTouchStartEvent touchEvent = 
+                new org.maplibre.reactnative.events.MapTouchStartEvent(this, latLng, screenPoint);
+            mManager.handleEvent(touchEvent);
         }
     }
 
