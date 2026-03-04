@@ -69,6 +69,7 @@ import org.maplibre.reactnative.events.IEvent;
 import org.maplibre.reactnative.events.MapChangeEvent;
 import org.maplibre.reactnative.events.MapClickEvent;
 import org.maplibre.reactnative.events.constants.EventTypes;
+import org.maplibre.reactnative.events.constants.EventKeys;
 import org.maplibre.reactnative.modules.MLRNModule;
 import org.maplibre.reactnative.utils.BitmapUtils;
 import org.maplibre.reactnative.utils.GeoJSONUtils;
