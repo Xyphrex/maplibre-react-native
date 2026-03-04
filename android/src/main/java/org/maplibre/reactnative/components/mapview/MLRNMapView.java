@@ -23,8 +23,10 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.bridge.WritableNativeMap;
 import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.geojson.Feature;
@@ -66,7 +68,9 @@ import org.maplibre.reactnative.events.AndroidCallbackEvent;
 import org.maplibre.reactnative.events.IEvent;
 import org.maplibre.reactnative.events.MapChangeEvent;
 import org.maplibre.reactnative.events.MapClickEvent;
+import org.maplibre.reactnative.events.MapTouchStartEvent;
 import org.maplibre.reactnative.events.constants.EventTypes;
+import org.maplibre.reactnative.events.constants.EventKeys;
 import org.maplibre.reactnative.modules.MLRNModule;
 import org.maplibre.reactnative.utils.BitmapUtils;
 import org.maplibre.reactnative.utils.GeoJSONUtils;
@@ -132,6 +136,8 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
     private ReadableMap mCompassViewMargins;
     private int mCompassViewPosition = -1;
     private Boolean mZoomEnabled;
+    private Boolean mDoubleTapZoomEnabled;
+    private Boolean mTapAndDragZoomEnabled;
 
     private SymbolManager symbolManager;
 
@@ -588,6 +594,29 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
         return result;
     }
 
+@Override
+public boolean dispatchTouchEvent(MotionEvent event) {
+    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        if (mMap != null) {
+            try {
+                LatLng latLng = mMap.getProjection().fromScreenLocation(new PointF(event.getX(), event.getY()));
+                PointF screenPoint = new PointF(event.getX(), event.getY());
+                
+                // Dispatch the touch start event using the same pattern as MapClickEvent
+                org.maplibre.reactnative.events.MapTouchStartEvent touchEvent = 
+                    new org.maplibre.reactnative.events.MapTouchStartEvent(this, latLng, screenPoint);
+                Log.d(LOG_TAG, "MapTouchStartEvent created, key=" + touchEvent.getKey() + ", payload=" + touchEvent.getPayload());
+                mManager.handleEvent(touchEvent);
+                Log.d(LOG_TAG, "MapTouchStartEvent dispatched via manager");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error dispatching MAP_TOUCH_START: ", e);
+            }
+        }
+    }
+
+    return super.dispatchTouchEvent(event);
+}
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         if (!mPaused) {
@@ -815,6 +844,19 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
     public void setReactZoomEnabled(boolean zoomEnabled) {
         mZoomEnabled = zoomEnabled;
         updateUISettings();
+    }
+
+    public void setReactDoubleTapZoomEnabled(boolean doubleTapZoomEnabled) {
+        mDoubleTapZoomEnabled = doubleTapZoomEnabled;
+        if (mMap != null && mMap.getUiSettings() != null) {
+            mMap.getUiSettings().setDoubleTapGesturesEnabled(doubleTapZoomEnabled);
+        }
+    }
+
+    public void setReactTapAndDragZoomEnabled(boolean tapAndDragZoomEnabled) {
+        mTapAndDragZoomEnabled = tapAndDragZoomEnabled;
+        updateUISettings();
+        // something to do here
     }
 
     public void setReactScrollEnabled(boolean scrollEnabled) {
@@ -1194,6 +1236,17 @@ public class MLRNMapView extends MapView implements OnMapReadyCallback, MapLibre
         if (mZoomEnabled != null && uiSettings.isZoomGesturesEnabled() != mZoomEnabled) {
             uiSettings.setZoomGesturesEnabled(mZoomEnabled);
             if (!mZoomEnabled) {
+                mMap.getGesturesManager().getStandardScaleGestureDetector().interrupt();
+            }
+        }
+
+        if (mDoubleTapZoomEnabled != null && uiSettings.isDoubleTapGesturesEnabled() != mDoubleTapZoomEnabled) {
+            uiSettings.setDoubleTapGesturesEnabled(mDoubleTapZoomEnabled);
+        }
+
+        if (mTapAndDragZoomEnabled != null && uiSettings.isZoomGesturesEnabled() != mTapAndDragZoomEnabled) {
+            uiSettings.setZoomGesturesEnabled(mTapAndDragZoomEnabled);
+            if (!mTapAndDragZoomEnabled) {
                 mMap.getGesturesManager().getStandardScaleGestureDetector().interrupt();
             }
         }

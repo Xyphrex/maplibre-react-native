@@ -124,6 +124,16 @@ public class MLRNMapViewManager extends AbstractEventEmitter<MLRNMapView> {
         mapView.setReactZoomEnabled(zoomEnabled);
     }
 
+    @ReactProp(name="doubleTapZoomEnabled")
+    public void setDoubleTapZoomEnabled(MLRNMapView mapView, boolean doubleTapZoomEnabled) {
+        mapView.setReactDoubleTapZoomEnabled(doubleTapZoomEnabled);
+    }
+
+    @ReactProp(name="tapAndDragZoomEnabled")
+    public void setTapAndDragZoomEnabled(MLRNMapView mapView, boolean tapAndDragZoomEnabled) {
+        mapView.setReactTapAndDragZoomEnabled(tapAndDragZoomEnabled);
+    }
+
     @ReactProp(name="scrollEnabled")
     public void setScrollEnabled(MLRNMapView mapView, boolean scrollEnabled) {
         mapView.setReactScrollEnabled(scrollEnabled);
@@ -192,6 +202,7 @@ public class MLRNMapViewManager extends AbstractEventEmitter<MLRNMapView> {
     public Map<String, String> customEvents() {
         return MapBuilder.<String, String>builder()
                 .put(EventKeys.MAP_CLICK, "onPress")
+                .put(EventKeys.MAP_TOUCH_START, "onTouchStart")
                 .put(EventKeys.MAP_LONG_CLICK,"onLongPress")
                 .put(EventKeys.MAP_ONCHANGE, "onMapChange")
                 .put(EventKeys.MAP_ON_LOCATION_CHANGE, "onLocationChange")

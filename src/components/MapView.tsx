@@ -92,6 +92,14 @@ interface MapViewProps extends BaseProps {
    */
   zoomEnabled?: boolean;
   /**
+   * Enable/Disable zoom increase on the map when the user double taps
+   */
+  doubleTapZoomEnabled?: boolean;
+  /**
+   * Enable/Disable tap and drag zoom gesture
+   */
+  tapAndDragZoomEnabled?: boolean;
+  /**
    * Enable/Disable scroll on the map
    */
   scrollEnabled?: boolean;
@@ -151,6 +159,10 @@ interface MapViewProps extends BaseProps {
    * Map press listener, gets called when a user presses the map
    */
   onPress?: (feature: GeoJSON.Feature) => void;
+  /**
+   * Map touch start listener, gets called when a user starts touching the map
+   */
+  onTouchStart?: (feature: GeoJSON.Feature) => void;
   /**
    * Map long press listener, gets called when a user long presses the map
    */
@@ -230,9 +242,10 @@ type CallableProps = {
     : never;
 }[keyof MapViewProps];
 
-interface NativeProps extends Omit<MapViewProps, "onPress" | "onLongPress"> {
+interface NativeProps extends Omit<MapViewProps, "onPress" | "onTouchStart" | "onLongPress"> {
   mapStyle?: string;
   onPress(event: NativeSyntheticEvent<{ payload: GeoJSON.Feature }>): void;
+  onTouchStart(event: NativeSyntheticEvent<{ payload: GeoJSON.Feature }>): void;
   onLongPress(event: NativeSyntheticEvent<{ payload: GeoJSON.Feature }>): void;
 }
 
@@ -602,6 +615,14 @@ export const MapView = memo(
         }
       };
 
+      const _onTouchStart = (
+        e: NativeSyntheticEvent<{ payload: GeoJSON.Feature }>,
+      ): void => {
+        if (isFunction(props.onTouchStart)) {
+          props.onTouchStart(e.nativeEvent.payload);
+        }
+      };
+
       const _onLongPress = (
         e: NativeSyntheticEvent<{ payload: GeoJSON.Feature }>,
       ): void => {
@@ -794,6 +815,7 @@ export const MapView = memo(
       const callbacks = {
         ref: (ref: MLRNMapViewRefType): void => _setNativeRef(ref),
         onPress: _onPress,
+        onTouchStart: _onTouchStart,
         onLongPress: _onLongPress,
         onMapChange: _onChange,
         onAndroidCallback: isAndroid() ? _onAndroidCallback : undefined,
