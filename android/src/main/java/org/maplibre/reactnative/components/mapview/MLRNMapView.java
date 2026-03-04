@@ -619,8 +619,57 @@ public boolean dispatchTouchEvent(MotionEvent event) {
             eventMap.putDouble("screenPointX", event.getX());
             eventMap.putDouble("screenPointY", event.getY());
 
-            // Dispatch using existing MapLibre RN event system
-            sendEvent(EventKeys.MAP_TOUCH_START, eventMap);
+            // Dispatch using existing MapLibre RN event system via the view manager.
+            // `sendEvent` no longer exists on the view itself, we have to create
+            // an `IEvent` and hand it off to the manager (which extends
+            // `AbstractEventEmitter`).
+            mManager.handleEvent(new org.maplibre.reactnative.events.IEvent() {
+                @Override
+                public int getID() {
+                    return getId();
+                }
+
+                @Override
+                public String getKey() {
+                    return EventKeys.MAP_TOUCH_START;
+                }
+
+                @Override
+                public String getType() {
+                    // type is primarily included in the JSON payload; we can
+                    // simply reuse the key here.
+                    return EventKeys.MAP_TOUCH_START;
+                }
+
+                @Override
+                public long getTimestamp() {
+                    return System.currentTimeMillis();
+                }
+
+                @Override
+                public boolean equals(org.maplibre.reactnative.events.IEvent event) {
+                    return getKey().equals(event.getKey()) && getType().equals(event.getType());
+                }
+
+                @Override
+                public boolean canCoalesce() {
+                    // touch‑start events should not be coalesced
+                    return false;
+                }
+
+                @Override
+                public com.facebook.react.bridge.WritableMap getPayload() {
+                    return eventMap;
+                }
+
+                @Override
+                public com.facebook.react.bridge.WritableMap toJSON() {
+                    com.facebook.react.bridge.WritableMap map = com.facebook.react.bridge.Arguments.createMap();
+                    map.putString("type", getType());
+                    map.putMap("payload", getPayload());
+                    return map;
+                }
+            });
         }
     }
 
